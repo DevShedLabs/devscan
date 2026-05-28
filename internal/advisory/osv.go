@@ -271,6 +271,20 @@ func (c *Client) enrichVulns(vulns []schema.Vulnerability) {
 		if vulns[r.idx].Severity == schema.SeverityUnknown {
 			vulns[r.idx].Severity = parseSeverity(r.data.Severity)
 		}
+		if vulns[r.idx].FixedIn == "" {
+			if fixed := extractFixed(r.data.Affected); fixed != "" {
+				vulns[r.idx].FixedIn = fixed
+				// Reconstruct the package from what we already stored on the vuln.
+				pkg := schema.Package{
+					Name:      vulns[r.idx].Package,
+					Ecosystem: vulns[r.idx].Ecosystem,
+				}
+				vulns[r.idx].Fix = &schema.Fix{
+					Type:    "upgrade",
+					Command: upgradeCommand(pkg, fixed),
+				}
+			}
+		}
 	}
 }
 

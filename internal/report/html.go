@@ -56,18 +56,12 @@ func renderHTML(w io.Writer, r *schema.Report) error {
 		p(`  <p class="empty">No runtimes detected.</p>`)
 	} else {
 		p(`  <table>`)
-		p(`    <thead><tr><th>Runtime</th><th>Version</th><th>Status</th><th>Path</th></tr></thead>`)
+		p(`    <thead><tr><th>Runtime</th><th>Version</th><th>Path</th></tr></thead>`)
 		p(`    <tbody>`)
 		for _, rt := range r.Runtimes {
-			status := string(rt.Status)
-			if rt.Latest != "" {
-				status = fmt.Sprintf("%s → %s", rt.Status, rt.Latest)
-			}
-			p(`      <tr><td>%s</td><td><code>%s</code></td><td class="status-%s">%s</td><td><code>%s</code></td></tr>`,
+			p(`      <tr><td>%s</td><td><code>%s</code></td><td><code>%s</code></td></tr>`,
 				html.EscapeString(rt.Name),
 				html.EscapeString(rt.Version),
-				string(rt.Status),
-				html.EscapeString(status),
 				html.EscapeString(rt.Path),
 			)
 		}
@@ -104,28 +98,41 @@ func renderHTML(w io.Writer, r *schema.Report) error {
 				if pkg.path != "" {
 					p(`    <div class="vuln-path">📂 <code>%s</code></div>`, html.EscapeString(pkg.path))
 				}
+				hasFixed := anyFixedIn(pkg.vulns)
+				hasFix := anyFix(pkg.vulns)
 				p(`    <table>`)
-				p(`      <thead><tr><th>Advisory</th><th>Title</th><th>Fixed In</th><th>Fix</th></tr></thead>`)
+				fmt.Fprint(w, "      <thead><tr><th>Advisory</th><th>Title</th>")
+				if hasFixed {
+					fmt.Fprint(w, "<th>Fixed In</th>")
+				}
+				if hasFix {
+					fmt.Fprint(w, "<th>Fix</th>")
+				}
+				fmt.Fprintln(w, "</tr></thead>")
 				p(`      <tbody>`)
 				for _, v := range pkg.vulns {
 					title := v.Title
 					if title == "" {
 						title = v.ID
 					}
-					fixedIn := v.FixedIn
-					if fixedIn == "" {
-						fixedIn = "—"
-					}
-					fix := "—"
-					if v.Fix != nil && v.Fix.Command != "" {
-						fix = fmt.Sprintf("<code>%s</code>", html.EscapeString(v.Fix.Command))
-					}
 					p(`        <tr>`)
 					p(`          <td><a href="https://osv.dev/vulnerability/%s" target="_blank">%s</a></td>`,
 						html.EscapeString(v.ID), html.EscapeString(v.ID))
 					p(`          <td>%s</td>`, html.EscapeString(title))
-					p(`          <td>%s</td>`, html.EscapeString(fixedIn))
-					p(`          <td>%s</td>`, fix)
+					if hasFixed {
+						fixedIn := v.FixedIn
+						if fixedIn == "" {
+							fixedIn = "—"
+						}
+						p(`          <td>%s</td>`, html.EscapeString(fixedIn))
+					}
+					if hasFix {
+						fix := "—"
+						if v.Fix != nil && v.Fix.Command != "" {
+							fix = fmt.Sprintf("<code>%s</code>", html.EscapeString(v.Fix.Command))
+						}
+						p(`          <td>%s</td>`, fix)
+					}
 					p(`        </tr>`)
 				}
 				p(`      </tbody>`)

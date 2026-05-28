@@ -43,14 +43,10 @@ func renderMarkdown(w io.Writer, r *schema.Report) error {
 	if len(r.Runtimes) == 0 {
 		p("No runtimes detected.")
 	} else {
-		p("| Runtime | Version | Status | Path |")
-		p("|---|---|---|---|")
+		p("| Runtime | Version | Path |")
+		p("|---|---|---|")
 		for _, rt := range r.Runtimes {
-			status := string(rt.Status)
-			if rt.Latest != "" {
-				status = fmt.Sprintf("%s (latest: %s)", rt.Status, rt.Latest)
-			}
-			p("| %s | `%s` | %s | `%s` |", rt.Name, rt.Version, status, rt.Path)
+			p("| %s | `%s` | `%s` |", rt.Name, rt.Version, rt.Path)
 		}
 	}
 	p("")
@@ -82,23 +78,42 @@ func renderMarkdown(w io.Writer, r *schema.Report) error {
 					p("**Path:** `%s`  ", pkg.path)
 				}
 				p("")
-				p("| Advisory | Title | Fixed In | Fix |")
-				p("|---|---|---|---|")
+				hasFixed := anyFixedIn(pkg.vulns)
+				hasFix := anyFix(pkg.vulns)
+				header := "| Advisory | Title"
+				sep := "|---|---"
+				if hasFixed {
+					header += " | Fixed In"
+					sep += "|---"
+				}
+				if hasFix {
+					header += " | Fix"
+					sep += "|---"
+				}
+				p(header + " |")
+				p(sep + "|")
 				for _, v := range pkg.vulns {
 					title := v.Title
 					if title == "" {
 						title = v.ID
 					}
-					fixedIn := v.FixedIn
-					if fixedIn == "" {
-						fixedIn = "—"
+					row := fmt.Sprintf("| [%s](https://osv.dev/vulnerability/%s) | %s",
+						v.ID, v.ID, title)
+					if hasFixed {
+						fixedIn := v.FixedIn
+						if fixedIn == "" {
+							fixedIn = "—"
+						}
+						row += " | " + fixedIn
 					}
-					fix := "—"
-					if v.Fix != nil && v.Fix.Command != "" {
-						fix = "`" + v.Fix.Command + "`"
+					if hasFix {
+						fix := "—"
+						if v.Fix != nil && v.Fix.Command != "" {
+							fix = "`" + v.Fix.Command + "`"
+						}
+						row += " | " + fix
 					}
-					p("| [%s](https://osv.dev/vulnerability/%s) | %s | %s | %s |",
-						v.ID, v.ID, title, fixedIn, fix)
+					p(row + " |")
 				}
 				p("")
 			}
@@ -225,4 +240,22 @@ func severityBadge(s schema.Severity) string {
 
 func joinStrings(ss []string, sep string) string {
 	return strings.Join(ss, sep)
+}
+
+func anyFixedIn(vulns []schema.Vulnerability) bool {
+	for _, v := range vulns {
+		if v.FixedIn != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func anyFix(vulns []schema.Vulnerability) bool {
+	for _, v := range vulns {
+		if v.Fix != nil && v.Fix.Command != "" {
+			return true
+		}
+	}
+	return false
 }
