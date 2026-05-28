@@ -3,6 +3,8 @@ package inspectors
 import (
 	"encoding/json"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/DevShedLabs/devscan/internal/schema"
 )
@@ -25,7 +27,6 @@ func (i *NpmInspector) Inspect(scope, path string) ([]schema.Package, error) {
 
 	out, err := cmd.Output()
 	if err != nil {
-		// npm list exits non-zero when packages have issues; still parse output
 		if len(out) == 0 {
 			return nil, err
 		}
@@ -41,15 +42,33 @@ func (i *NpmInspector) Inspect(scope, path string) ([]schema.Package, error) {
 		return nil, err
 	}
 
+	modulesRoot := npmModulesRoot(scope, path)
+
 	var packages []schema.Package
 	for name, dep := range raw.Dependencies {
+		pkgPath := ""
+		if modulesRoot != "" {
+			pkgPath = filepath.Join(modulesRoot, name)
+		}
 		packages = append(packages, schema.Package{
 			Name:      name,
 			Version:   dep.Version,
 			Ecosystem: "npm",
 			Scope:     scope,
 			Direct:    true,
+			Path:      pkgPath,
 		})
 	}
 	return packages, nil
+}
+
+func npmModulesRoot(scope, projectPath string) string {
+	if scope == "project" && projectPath != "" {
+		return filepath.Join(projectPath, "node_modules")
+	}
+	out, err := exec.Command("npm", "root", "-g").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }

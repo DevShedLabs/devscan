@@ -135,7 +135,7 @@ func renderTable(w io.Writer, report *schema.Report) error {
 
 	// Vulnerabilities — grouped by package@version, one block per package
 	if len(report.Vulnerabilities) > 0 {
-		fmt.Fprintln(tw, bold("Vulnerabilities:"))
+		fmt.Fprintf(tw, bold("Vulnerabilities")+" %s\n", colorGray+"(matched against OSV.dev advisories for your installed versions)"+colorReset)
 		for _, group := range groupVulns(report.Vulnerabilities) {
 			color := severityColor(group.worst)
 			reset := ""
@@ -173,7 +173,7 @@ func renderTable(w io.Writer, report *schema.Report) error {
 	fmt.Fprintln(tw, bold("Summary:"))
 	fmt.Fprintf(tw, "  Runtimes detected:\t%d\n", s.Runtimes)
 	fmt.Fprintf(tw, "  Packages scanned:\t%d\n", s.Packages)
-	fmt.Fprintf(tw, "  Known vulnerabilities:\t%s\n", vulnSummaryLine(s.Vulnerabilities))
+	fmt.Fprintf(tw, "  Vulnerable packages installed:\t%s\n", vulnSummaryLine(s.Vulnerabilities))
 	fmt.Fprintf(tw, "  Packages outdated:\t%d\n", s.Outdated)
 
 	return tw.Flush()
