@@ -56,12 +56,19 @@ func renderHTML(w io.Writer, r *schema.Report) error {
 		p(`  <p class="empty">No runtimes detected.</p>`)
 	} else {
 		p(`  <table>`)
-		p(`    <thead><tr><th>Runtime</th><th>Version</th><th>Path</th></tr></thead>`)
+		p(`    <thead><tr><th>Runtime</th><th>Version</th><th>Status</th><th>Path</th></tr></thead>`)
 		p(`    <tbody>`)
 		for _, rt := range r.Runtimes {
-			p(`      <tr><td>%s</td><td><code>%s</code></td><td><code>%s</code></td></tr>`,
+			status := string(rt.Status)
+			statusClass := "status-" + string(rt.Status)
+			if rt.Latest != "" && rt.Status == schema.StatusOutdated {
+				status = fmt.Sprintf("outdated → %s", rt.Latest)
+			}
+			p(`      <tr><td>%s</td><td><code>%s</code></td><td class="%s">%s</td><td><code>%s</code></td></tr>`,
 				html.EscapeString(rt.Name),
 				html.EscapeString(rt.Version),
+				statusClass,
+				html.EscapeString(status),
 				html.EscapeString(rt.Path),
 			)
 		}

@@ -8,6 +8,7 @@ import (
 	"github.com/DevShedLabs/devscan/internal/detectors"
 	"github.com/DevShedLabs/devscan/internal/inspectors"
 	"github.com/DevShedLabs/devscan/internal/schema"
+	"github.com/DevShedLabs/devscan/internal/versions"
 	"github.com/spf13/cobra"
 )
 
@@ -64,8 +65,9 @@ func runFullScan(opts scanOptions) (*schema.Report, error) {
 		System: map[string]string{},
 	}
 
-	// Detect runtimes
+	// Detect runtimes and enrich with latest version info
 	report.Runtimes = detectors.RunAll(detectors.All())
+	versions.Enrich(report.Runtimes)
 
 	// Inspect packages
 	report.Packages = deduplicatePackages(inspectors.RunAll(inspectors.All(), opts.scope, opts.path))

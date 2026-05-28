@@ -16,3 +16,5 @@ dist/
 .devscan.json
 *.local.json
 
+report.html
+report.md

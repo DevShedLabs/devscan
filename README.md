@@ -120,15 +120,16 @@ Useful for CI pipelines:
 
 ## Cache
 
-Advisory results from OSV.dev are cached for 1 hour to avoid redundant network requests on repeated scans.
+Network results are cached locally to keep scans fast.
 
-| OS | Cache location |
-|---|---|
-| macOS | `~/Library/Caches/devscan/` |
-| Linux | `~/.cache/devscan/` |
-| Windows | `%LocalAppData%\devscan\` |
+| Data | TTL | Location (macOS) |
+|---|---|---|
+| Vulnerability advisories (OSV.dev) | 1 hour | `~/Library/Caches/devscan/` |
+| Runtime latest versions | 7 days | `~/Library/Caches/devscan/versions/` |
 
-Force a fresh lookup at any time:
+On Linux: `~/.cache/devscan/` · On Windows: `%LocalAppData%\devscan\`
+
+Force a fresh advisory lookup at any time:
 
 ```bash
 devscan doctor --no-cache
@@ -186,7 +187,8 @@ The JSON output schema is the central contract. The CLI, and future TUI and GUI 
 
 ## Roadmap
 
-- [ ] Runtime latest-version checks (Node release API, python.org)
+- [x] Runtime latest-version checks — Go, Node, Python
+- [ ] Runtime latest-version checks — PHP, Rust, Git
 - [ ] Ruby / gem support
 - [ ] Homebrew package inspection
 - [ ] TUI (Bubbletea)

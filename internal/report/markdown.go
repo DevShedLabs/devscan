@@ -43,10 +43,14 @@ func renderMarkdown(w io.Writer, r *schema.Report) error {
 	if len(r.Runtimes) == 0 {
 		p("No runtimes detected.")
 	} else {
-		p("| Runtime | Version | Path |")
-		p("|---|---|---|")
+		p("| Runtime | Version | Status | Path |")
+		p("|---|---|---|---|")
 		for _, rt := range r.Runtimes {
-			p("| %s | `%s` | `%s` |", rt.Name, rt.Version, rt.Path)
+			status := string(rt.Status)
+			if rt.Latest != "" && rt.Status == schema.StatusOutdated {
+				status = fmt.Sprintf("outdated (latest: %s)", rt.Latest)
+			}
+			p("| %s | `%s` | %s | `%s` |", rt.Name, rt.Version, status, rt.Path)
 		}
 	}
 	p("")
