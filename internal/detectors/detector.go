@@ -46,6 +46,7 @@ func All() []Detector {
 		&NodeDetector{},
 		&BunDetector{},
 		&PythonDetector{},
+		&RubyDetector{},
 		&GitDetector{},
 		&PHPDetector{},
 		&RustDetector{},

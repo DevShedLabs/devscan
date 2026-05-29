@@ -227,8 +227,9 @@ The JSON output schema is the central contract. The CLI, and future TUI and GUI 
 - [x] Filesystem paths for vulnerable packages
 - [x] System info in reports (OS, chip, arch)
 - [x] HTML and Markdown report export
-- [ ] Ruby / gem support
-- [ ] Homebrew package inspection
+- [x] Ruby / gem support
+- [x] Homebrew package inspection
+- [ ] System package managers — dpkg (Debian/Ubuntu), rpm (Fedora/RHEL), apk (Alpine)
 - [ ] Baseline diff (`--compare baseline.json`)
 - [ ] CI summary output (GitHub Actions annotations)
 - [ ] `--ignore` flag to suppress known/accepted advisories

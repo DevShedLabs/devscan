@@ -68,6 +68,8 @@ func fetchLatest(runtime string) (string, error) {
 		v, err = fetchGit()
 	case "bun":
 		v, err = fetchBun()
+	case "ruby":
+		v, err = fetchRuby()
 	default:
 		return "", nil
 	}
@@ -183,6 +185,25 @@ func fetchPHP() (string, error) {
 		return r.Version, nil
 	}
 	return "", fmt.Errorf("no stable php release found")
+}
+
+func fetchRuby() (string, error) {
+	resp, err := client.Get("https://endoflife.date/api/ruby.json")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var releases []struct {
+		Latest string `json:"latest"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
+		return "", err
+	}
+	if len(releases) > 0 {
+		return releases[0].Latest, nil
+	}
+	return "", fmt.Errorf("no ruby release found")
 }
 
 func fetchBun() (string, error) {
