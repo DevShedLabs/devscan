@@ -159,23 +159,12 @@ func renderTable(w io.Writer, report *schema.Report) error {
 		fmt.Fprintln(tw)
 	}
 
-	// Outdated
-	if len(report.Outdated) > 0 {
-		fmt.Fprintln(tw, bold("Outdated:"))
-		for _, o := range report.Outdated {
-			fmt.Fprintf(tw, "  %-20s\t%s → %s\t[%s]\n",
-				o.Name, o.Current, o.Latest, o.Ecosystem)
-		}
-		fmt.Fprintln(tw)
-	}
-
 	// Summary
 	s := report.Summary
 	fmt.Fprintln(tw, bold("Summary:"))
 	fmt.Fprintf(tw, "  Runtimes detected:\t%d\n", s.Runtimes)
 	fmt.Fprintf(tw, "  Packages scanned:\t%d\n", s.Packages)
 	fmt.Fprintf(tw, "  Vulnerable packages installed:\t%s\n", vulnSummaryLine(s.Vulnerabilities))
-	fmt.Fprintf(tw, "  Packages outdated:\t%d\n", s.Outdated)
 	fmt.Fprintf(tw, "  Scan duration:\t%s\n", formatDuration(report.Meta.DurationMs))
 
 	return tw.Flush()

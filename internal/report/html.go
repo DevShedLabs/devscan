@@ -167,28 +167,6 @@ func renderHTML(w io.Writer, r *schema.Report) error {
 	}
 	p(`</section>`)
 
-	// Outdated
-	p(`<section>`)
-	p(`  <h2>Outdated Packages</h2>`)
-	if len(r.Outdated) == 0 {
-		p(`  <p class="empty">All packages are up to date.</p>`)
-	} else {
-		p(`  <table>`)
-		p(`    <thead><tr><th>Package</th><th>Current</th><th>Latest</th><th>Ecosystem</th></tr></thead>`)
-		p(`    <tbody>`)
-		for _, o := range r.Outdated {
-			p(`      <tr><td>%s</td><td><code>%s</code></td><td><code>%s</code></td><td>%s</td></tr>`,
-				html.EscapeString(o.Name),
-				html.EscapeString(o.Current),
-				html.EscapeString(o.Latest),
-				html.EscapeString(o.Ecosystem),
-			)
-		}
-		p(`    </tbody>`)
-		p(`  </table>`)
-	}
-	p(`</section>`)
-
 	// Packages
 	p(`<section>`)
 	p(`  <h2>Installed Packages</h2>`)

@@ -47,7 +47,6 @@ func renderMarkdown(w io.Writer, r *schema.Report) error {
 	p("| High vulnerabilities | %d |", r.Summary.Vulnerabilities.High)
 	p("| Medium vulnerabilities | %d |", r.Summary.Vulnerabilities.Medium)
 	p("| Low vulnerabilities | %d |", r.Summary.Vulnerabilities.Low)
-	p("| Outdated packages | %d |", r.Summary.Outdated)
 	p("| Scan duration | %s |", formatDuration(r.Meta.DurationMs))
 	p("")
 
@@ -139,20 +138,6 @@ func renderMarkdown(w io.Writer, r *schema.Report) error {
 			}
 		}
 	}
-
-	// Outdated
-	p("## Outdated Packages")
-	p("")
-	if len(r.Outdated) == 0 {
-		p("All packages are up to date.")
-	} else {
-		p("| Package | Current | Latest | Ecosystem |")
-		p("|---|---|---|---|")
-		for _, o := range r.Outdated {
-			p("| %s | `%s` | `%s` | %s |", o.Name, o.Current, o.Latest, o.Ecosystem)
-		}
-	}
-	p("")
 
 	// Packages
 	p("## Installed Packages")
