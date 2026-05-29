@@ -40,6 +40,7 @@ var osvEcosystem = map[string]string{
 	"go":         "Go",
 	"crates.io":  "crates.io",
 	"packagist":  "Packagist",
+	"homebrew":   "Bitnami",
 }
 
 type osvQuery struct {

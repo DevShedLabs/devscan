@@ -48,5 +48,6 @@ func All() []Inspector {
 		&ComposerInspector{},
 		&CargoInspector{},
 		&GoModInspector{},
+		&BrewInspector{},
 	}
 }
