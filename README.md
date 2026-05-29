@@ -52,6 +52,9 @@ devscan locate
 # Scan a specific project
 devscan doctor --path ./my-app
 
+# Scan a project and all sub-projects up to 2 levels deep
+devscan doctor --path ./my-app --depth 2
+
 # Machine-readable output
 devscan doctor --format json
 
@@ -77,9 +80,18 @@ devscan report --json --output scan.json
 
 # Scoped to a project
 devscan report --html --output report.html --path ./my-app
+
+# Traverse sub-projects
+devscan report --html --output report.html --path ./my-app --depth 2
 ```
 
-The HTML report includes summary cards, severity-grouped vulnerabilities with OSV links, filesystem paths, and a full package inventory.
+Reports include:
+- System info: OS, version, chip, architecture
+- Summary cards with severity counts and scan duration
+- Runtime versions with outdated status
+- Vulnerabilities grouped by severity, with OSV advisory links, fixed-in versions, and fix commands
+- Filesystem paths for every vulnerable package installation
+- Full package inventory
 
 ---
 
@@ -92,10 +104,26 @@ The HTML report includes summary cards, severity-grouped vulnerabilities with OS
 --global             Scan global packages (default)
 --project            Scan current project directory
 --path string        Explicit project path to scan
+--depth int          Traverse subdirectories up to this depth (0 = path only)
 --no-color           Disable color output
 --no-cache           Bypass cache and force a fresh advisory lookup
 -o, --output string  Write report to file (report command only)
 ```
+
+---
+
+## Fix Commands
+
+When a fix is available, devscan generates the exact command to run:
+
+| Ecosystem | Example |
+|---|---|
+| npm | `npm install pkg@^1.2.3` |
+| pypi | `pip install --upgrade pkg>=1.2.3` |
+| packagist | `composer require vendor/pkg:^1.2.3` |
+| crates.io | `cargo update -p pkg --precise 1.2.3` |
+| go | `go get module@v1.2.3` |
+| gem | `gem update pkg` |
 
 ---
 
@@ -129,7 +157,7 @@ Network results are cached locally to keep scans fast.
 
 On Linux: `~/.cache/devscan/` · On Windows: `%LocalAppData%\devscan\`
 
-Force a fresh advisory lookup at any time:
+Force a fresh lookup at any time:
 
 ```bash
 devscan doctor --no-cache
@@ -157,13 +185,16 @@ Place `.devscan.json` in your project root or home directory:
 | Ecosystem | Runtime | Packages | Vulnerabilities |
 |---|---|---|---|
 | Node.js / npm | ✓ | ✓ | ✓ via OSV.dev |
+| Bun | ✓ | ✓ (via npm) | ✓ via OSV.dev |
 | Python / pip | ✓ | ✓ | ✓ via OSV.dev |
 | PHP / Composer | ✓ | ✓ | ✓ via OSV.dev |
 | Rust / Cargo | ✓ | ✓ | ✓ via OSV.dev |
 | Go modules | ✓ | ✓ (project) | ✓ via OSV.dev |
 | Git | ✓ | — | — |
 
-Vulnerability data is sourced from [OSV.dev](https://osv.dev) — an open, community-driven vulnerability database covering npm, PyPI, Go, crates.io, Packagist, and more.
+Vulnerability data is sourced from [OSV.dev](https://osv.dev) — an open, community-driven vulnerability database covering npm, PyPI, Go, crates.io, Packagist, RubyGems, and more.
+
+Large scans (1000+ packages) are automatically chunked into batches to stay within OSV API limits.
 
 ---
 
@@ -173,9 +204,12 @@ Vulnerability data is sourced from [OSV.dev](https://osv.dev) — an open, commu
 devscan/
   cmd/                  # CLI commands (Cobra)
   internal/
-    detectors/          # Runtime detection (node, python, git, php, rust, go)
+    detectors/          # Runtime detection (node, bun, python, git, php, rust, go)
     inspectors/         # Package inspection (npm, pip, composer, cargo, gomod)
     advisory/           # Vulnerability lookups (OSV.dev) with 1hr cache
+    versions/           # Runtime latest-version checks with 7-day cache
+    sysinfo/            # OS, chip, and architecture detection
+    traverse/           # Sub-project discovery by manifest files
     output/             # Terminal renderers (table, JSON, compact)
     report/             # Export renderers (Markdown, HTML, JSON)
     schema/             # Shared types
@@ -187,13 +221,17 @@ The JSON output schema is the central contract. The CLI, and future TUI and GUI 
 
 ## Roadmap
 
-- [x] Runtime latest-version checks — Go, Node, Python, PHP, Rust, Git
+- [x] Runtime latest-version checks — Go, Node, Bun, Python, PHP, Rust, Git
+- [x] Fix commands for all supported ecosystems
+- [x] Sub-project traversal with `--depth`
+- [x] Filesystem paths for vulnerable packages
+- [x] System info in reports (OS, chip, arch)
+- [x] HTML and Markdown report export
 - [ ] Ruby / gem support
 - [ ] Homebrew package inspection
-- [ ] TUI (Bubbletea)
-- [ ] `--watch` mode
 - [ ] Baseline diff (`--compare baseline.json`)
-- [ ] Menu bar app (macOS)
+- [ ] CI summary output (GitHub Actions annotations)
+- [ ] `--ignore` flag to suppress known/accepted advisories
 
 ---
 
