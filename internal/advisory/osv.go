@@ -171,6 +171,15 @@ func (c *Client) QueryPackages(packages []schema.Package) ([]schema.Vulnerabilit
 	// The batch endpoint omits these fields; the detail endpoint returns them.
 	c.enrichVulns(vulns)
 
+	// Drop any homebrew vulns that had no fixed version after enrichment.
+	filtered := vulns[:0]
+	for _, v := range vulns {
+		if v.ID != "" {
+			filtered = append(filtered, v)
+		}
+	}
+	vulns = filtered
+
 	if !c.noCache {
 		c.saveCache(key, vulns)
 	}
@@ -227,12 +236,18 @@ func (c *Client) queryChunk(queries []osvPackageQuery, queried []schema.Package,
 				vuln.References = append(vuln.References, ref.URL)
 			}
 
-			if fixed := extractFixed(v.Affected); fixed != "" {
+			fixed := extractFixed(v.Affected)
+			if fixed != "" {
 				vuln.FixedIn = fixed
 				vuln.Fix = &schema.Fix{
 					Type:    "upgrade",
 					Command: upgradeCommand(pkg, fixed),
 				}
+			} else if pkg.Ecosystem == "homebrew" {
+				// Bitnami advisories frequently omit the fixed version, making it
+				// impossible to determine whether the installed version is actually
+				// affected. Skip rather than report a false positive.
+				continue
 			}
 
 			vulns = append(vulns, vuln)
@@ -296,7 +311,6 @@ func (c *Client) enrichVulns(vulns []schema.Vulnerability) {
 		if vulns[r.idx].FixedIn == "" {
 			if fixed := extractFixed(r.data.Affected); fixed != "" {
 				vulns[r.idx].FixedIn = fixed
-				// Reconstruct the package from what we already stored on the vuln.
 				pkg := schema.Package{
 					Name:      vulns[r.idx].Package,
 					Ecosystem: vulns[r.idx].Ecosystem,
@@ -305,6 +319,11 @@ func (c *Client) enrichVulns(vulns []schema.Vulnerability) {
 					Type:    "upgrade",
 					Command: upgradeCommand(pkg, fixed),
 				}
+			}
+			// If still no fixed version and this is a homebrew package, mark for
+			// removal — we can't verify if the installed version is affected.
+			if vulns[r.idx].FixedIn == "" && vulns[r.idx].Ecosystem == "homebrew" {
+				vulns[r.idx].ID = "" // sentinel: drop in caller
 			}
 		}
 	}
