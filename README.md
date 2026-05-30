@@ -1,5 +1,9 @@
 # DevScan
 
+![Version](https://img.shields.io/github/v/tag/DevShedLabs/devscan?label=version&sort=semver)
+![License](https://img.shields.io/github/license/DevShedLabs/devscan)
+![Go](https://img.shields.io/badge/built%20with-Go-00ADD8)
+
 A developer environment security and health scanner. Detects runtimes, inspects installed packages, and surfaces known vulnerabilities and outdated dependencies — across your global environment or a specific project.
 
 Built with Go. Designed to be scriptable, CI-friendly, and extensible.
